@@ -15,6 +15,9 @@
     "dependencies": {
         "@ai-sdk/openai-compatible": "^3.0.1",
         "@ai-sdk/react": "^4.0.5",
+        "@capacitor/android": "^8.4.2",
+        "@capacitor/cli": "^8.4.2",
+        "@capacitor/core": "^8.4.2",
         "@fontsource/inter": "^5.2.8",
         "@fontsource/space-grotesk": "^5.2.10",
         "@hookform/resolvers": "^5.2.2",

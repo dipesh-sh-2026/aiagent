@@ -1,0 +1,10 @@
+{
+  "appId": "com.nexus.aiagent",
+  "appName": "Nexus AI Agent",
+  "webDir": ".output/public",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  }
+}
