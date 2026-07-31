@@ -67,9 +67,18 @@
       font-weight: 600;
       cursor: pointer;
       transition: opacity 0.2s;
+      margin-bottom: 8px;
     }
     .btn:active { opacity: 0.85; }
-    .status { margin-top: 14px; font-size: 12px; color: #00d4ff; display: none; }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #a1a5b5;
+      padding: 10px;
+      font-size: 13px;
+    }
+    .status { margin-top: 14px; font-size: 13px; color: #00d4ff; display: none; line-height: 1.4; }
+    .error-msg { color: #ff5252; }
     .spinner {
       width: 24px;
       height: 24px;
@@ -91,12 +100,14 @@
     
     <div class="input-group">
       <label for="serverUrl">Server Endpoint URL</label>
-      <input type="text" id="serverUrl" placeholder="https://your-app.vercel.app or http://192.168.1.5:3000" />
+      <input type="text" id="serverUrl" placeholder="https://your-app.vercel.app or http://192.168.1.101:8081" />
     </div>
 
     <button class="btn" onclick="connectServer()">Connect & Open App</button>
+    <button class="btn btn-secondary" onclick="resetServer()">Reset URL</button>
+    
     <div class="spinner" id="spinner"></div>
-    <div class="status" id="status">Connecting...</div>
+    <div class="status" id="status"></div>
   </div>
 
   <script>
@@ -104,22 +115,30 @@
     const input = document.getElementById('serverUrl');
     if (savedUrl) {
       input.value = savedUrl;
-      if (savedUrl.startsWith('http://') || savedUrl.startsWith('https://')) {
-        showLoading('Loading server...');
-        setTimeout(() => { window.location.href = savedUrl; }, 400);
-      }
     } else {
       input.value = 'http://192.168.1.101:8081';
     }
 
-    function showLoading(msg) {
-      document.getElementById('spinner').style.display = 'block';
+    function showStatus(msg, isError = false) {
+      document.getElementById('spinner').style.display = isError ? 'none' : 'block';
       const st = document.getElementById('status');
       st.innerText = msg;
+      st.className = 'status' + (isError ? ' error-msg' : '');
       st.style.display = 'block';
     }
 
-    function connectServer() {
+    function hideStatus() {
+      document.getElementById('spinner').style.display = 'none';
+      document.getElementById('status').style.display = 'none';
+    }
+
+    function resetServer() {
+      localStorage.removeItem('NEXUS_SERVER_URL');
+      input.value = 'http://192.168.1.101:8081';
+      hideStatus();
+    }
+
+    async function connectServer() {
       let url = input.value.trim();
       if (!url) {
         alert('Please enter your Server Endpoint URL');
@@ -128,11 +147,31 @@
       if (!url.startsWith('http://') && !url.startsWith('https://')) {
         url = 'https://' + url;
       }
-      localStorage.setItem('NEXUS_SERVER_URL', url);
-      showLoading('Opening ' + url + '...');
-      setTimeout(() => {
-        window.location.href = url;
-      }, 300);
+
+      showStatus('Testing connection to ' + url + '...');
+
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 4000);
+        
+        // Test reachability
+        await fetch(url, { mode: 'no-cors', signal: controller.signal });
+        clearTimeout(timer);
+
+        localStorage.setItem('NEXUS_SERVER_URL', url);
+        showStatus('Opening Nexus AI Agent...');
+        setTimeout(() => {
+          window.location.href = url;
+        }, 300);
+      } catch (err) {
+        console.warn('Direct fetch test failed, forcing navigation:', err);
+        // Fallback: Proceed with navigation directly
+        localStorage.setItem('NEXUS_SERVER_URL', url);
+        showStatus('Navigating to server...');
+        setTimeout(() => {
+          window.location.href = url;
+        }, 300);
+      }
     }
   </script>
 </body>
